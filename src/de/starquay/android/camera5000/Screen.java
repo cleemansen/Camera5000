@@ -1,11 +1,14 @@
 package de.starquay.android.camera5000;
 
 import java.io.IOException;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.hardware.Camera;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
@@ -23,16 +26,22 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class Screen extends Activity implements SurfaceHolder.Callback, OnClickListener {
+public class Screen extends Activity implements SurfaceHolder.Callback, OnClickListener, OnSharedPreferenceChangeListener {
 
 	private Camera mCamera;
-	private Parameters para;
 	private Size mPreviewSize;
+//	private Parameters para;
 
 	private TextView burstCntView;
 	private TextView burstNextView;
 	private CountDownAction countDown;
+	
+	/** A list of preferences, which have been changed by the user */
+	private List<String> newPrefsBuffer;
+	
+	private boolean startup = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,7 +64,14 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		/** text fields */
 		burstCntView = (TextView) findViewById(R.id.burstCnt);
 		burstNextView = (TextView) findViewById(R.id.burstNext);
+		
+		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		settings.registerOnSharedPreferenceChangeListener(this);
+		newPrefsBuffer = new LinkedList<String>();
+		
+		
 	}
+	
 
 	@Override
 	protected void onResume() {
@@ -63,8 +79,10 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		// Open the default i.e. the first rear facing camera.
 		mCamera = Camera.open();
 		setCamera(mCamera);
-		applySettings();
-		
+		if(startup) {
+			applySettings(startup);
+			startup = false;
+		}
 	}
 
 	@Override
@@ -117,25 +135,64 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		return super.onOptionsItemSelected(item);
 	}
 	
-	/**
-	 * Applies the stored settings
-	 */
-	private void applySettings() {
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		
-		String s = settings.getString("colorEffectsPrefList", Parameters.EFFECT_NONE);
-		para.setColorEffect(s);
-		s = settings.getString("sceneModesPrefList", Parameters.SCENE_MODE_AUTO);
-		para.setSceneMode(s);
-		mCamera.setParameters(para);
-
-	}
-
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode == 0 && requestCode == RESULT_OK) {
-			
+//			applySettings();
 		}
 	};
+	
+	/**
+	 * Reacts on changed shared preferences
+	 * The LinkedList applyTheseSettings is a Work-Around:
+	 * I couldn't apply the changes directly to the camera, because the camera was released by onPause().
+	 */
+	@Override
+	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		Toast.makeText(this, "sharedPrefChanged", Toast.LENGTH_SHORT).show();
+		
+		/** Color Effects */
+		String look4key = this.getString(R.string.key_colorEffect);
+		if(key.equals(look4key)) {
+			newPrefsBuffer.add(key);
+		}
+		/** Scene Modes */
+		look4key = this.getString(R.string.key_sceneMode);
+		if(key.equals(look4key)) {
+			newPrefsBuffer.add(key);
+		}
+		
+	}
+	
+	private static int cnt = 0;
+	/**
+	 * Applies the settings done by the user with the preference activity
+	 * @param startup: signals the app is starting the first time
+	 * 			if true: apply all stored settings.
+	 * 			if false: apply only changed settings.
+	 */
+	private void applySettings(boolean startup) {
+		Parameters para = mCamera.getParameters();
+		
+		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		
+		Iterator<String> i = newPrefsBuffer.iterator();
+		while(i.hasNext() || startup) {
+			String key = "";
+			if(i.hasNext())
+				key = i.next();
+			String storedKey = this.getString(R.string.key_colorEffect);
+			if(key.equals(storedKey) || startup)
+				para.setColorEffect(shared.getString(storedKey, Parameters.EFFECT_NONE));
+			
+			storedKey = this.getString(R.string.key_sceneMode);
+			if(key.equals(storedKey) || startup)
+				para.setSceneMode(shared.getString(storedKey, Parameters.SCENE_MODE_AUTO));
+			
+			startup = false;
+		}
+		newPrefsBuffer = new LinkedList<String>();
+		mCamera.setParameters(para);
+	}
 
 	/**
 	 * Sets the camera and his parameters (i.e. optimal preview size)
@@ -145,6 +202,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	public void setCamera(Camera camera) {
 		mCamera = camera;
 		if (mCamera != null) {
+			Parameters para = mCamera.getParameters();
 			List<Size> mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
 			
 			if (mSupportedPreviewSizes != null) {
@@ -153,7 +211,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 				getWindowManager().getDefaultDisplay().getMetrics(metrics);
 				mPreviewSize = HelperMethods.getOptimalPreviewSize(mSupportedPreviewSizes, metrics.widthPixels, metrics.heightPixels);
 			}
-			readCameraParametersAndPrepareAppSettings();
+			applySettings(false);
 		}
 	}
 	
@@ -164,15 +222,16 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	 */
 	private Intent readCameraParametersAndPrepareAppSettings() {
 		Intent showPrefs = new Intent(getBaseContext(), Preferences.class);
-		para = mCamera.getParameters();
+		Parameters para = mCamera.getParameters();
 		
 		/** Scene Modes */
+		String key = this.getString(R.string.key_sceneMode);
 		List<String> sceneModes = para.getSupportedSceneModes();
-		String[] t = sceneModes.toArray(new String[sceneModes.size()]);
-		showPrefs.putExtra("Scene Modes", para.getSupportedSceneModes().toArray(new String[sceneModes.size()]));
+		showPrefs.putExtra(key, sceneModes.toArray(new String[sceneModes.size()]));
 		/** Color Effects */
+		key = this.getString(R.string.key_colorEffect);
 		List<String> colorEffects = para.getSupportedColorEffects();
-		showPrefs.putExtra("Color Effects", colorEffects.toArray(new String[colorEffects.size()]));
+		showPrefs.putExtra(key, colorEffects.toArray(new String[colorEffects.size()]));
 		/** Picture Size */
 		List<Size> picSize = para.getSupportedPictureSizes();
 		String[] picSizeArray = new String[picSize.size()];

@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="ColorEffects">
+    <array name="ColorEffects">
     	<item>one</item>
     	<item>two</item>
     	<item>three</item>
-    </string-array>
+    </array>
+    <array name="ColorEffectsV">
+    	<item>on</item>
+    	<item>tw</item>
+    	<item>thee</item>
+    </array>
+    
 </resources>

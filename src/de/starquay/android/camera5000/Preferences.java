@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.hardware.Camera.Parameters;
 import android.os.Bundle;
 import android.preference.ListPreference;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
@@ -11,59 +12,46 @@ import android.preference.PreferenceScreen;
 
 public class Preferences extends PreferenceActivity {
 	
+	String[] clone;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setPreferenceScreen(createPreferenceHierarchy());
+		addPreferencesFromResource(R.xml.preferences);
+		fillPreferenceHierarchy();
 	}
 	
-	private PreferenceScreen createPreferenceHierarchy() {
+	private void fillPreferenceHierarchy() {
 		Bundle b = getIntent().getExtras();
 		
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		
-		/** ROOT */
-		PreferenceScreen root = getPreferenceManager().createPreferenceScreen(this);
-		root.setKey("FreqCapPrefs");
-		
 		/** All Camera Settings */
-		PreferenceCategory catCameraParas = new PreferenceCategory(this);
-		catCameraParas.setTitle("Camera");
-		root.addPreference(catCameraParas);
 		
 		/** Color Effects */
-		if(b.containsKey("Color Effects")) {
-			ListPreference colorFxPrefList = new ListPreference(this);
-			catCameraParas.addPreference(colorFxPrefList);
-			colorFxPrefList.setKey("colorEffectsPrefList");
-			colorFxPrefList.setTitle("Color Effects");
-			colorFxPrefList.setSummary(settings.getString("colorEffectsPrefList", Parameters.EFFECT_NONE));
-			colorFxPrefList.setDialogTitle("Color Effects");
-			colorFxPrefList.setDialogMessage("The following color effects are supported by your camera");
-			String[] sdf = b.getStringArray("Color Effects");
+		String key = this.getString(R.string.key_colorEffect);
+		String defaultVal = Parameters.EFFECT_NONE;
+		String[] valArray = b.getStringArray(key);
+		if(b.containsKey(key)) {
+			ListPreference lp = (ListPreference) findPreference(key);
+			lp.setSummary(settings.getString(key, defaultVal));
 			// Sets the human-readable entries to be shown in the list.
-			CharSequence[] cs = new CharSequence[sdf.length];
-			for(int i = 0; i < sdf.length; i++)
-				cs[i] = sdf[i];
-			colorFxPrefList.setEntries(R.array.ColorEffects);
+			lp.setEntries(valArray);
 			// The array to find the value to save for a preference when an entry from entries is selected.
-			colorFxPrefList.setEntryValues(R.array.ColorEffects);
+			lp.setEntryValues(valArray);
 		}
-		if(b.containsKey("Scene Modes")) {
-			ListPreference sceneModesPrefList = new ListPreference(this);
-			sceneModesPrefList.setKey("sceneModesPrefList");
-			sceneModesPrefList.setTitle("Scene Modes");
-			sceneModesPrefList.setSummary(settings.getString("sceneModesPrefList", Parameters.SCENE_MODE_AUTO));
-			sceneModesPrefList.setDialogTitle("Scene Modes");
-			sceneModesPrefList.setDialogMessage("The following Scene Modes are supported by your camera");
-			String[] ds = b.getStringArray("Scene Modes");
-			CharSequence[] waaaaaa = {"Waa", "aaa", "aaaah"};
-			sceneModesPrefList.setEntries(waaaaaa);
-			sceneModesPrefList.setEntryValues(waaaaaa);
-			catCameraParas.addPreference(sceneModesPrefList);
+		/** Scene Modes */
+		key = this.getString(R.string.key_sceneMode);
+		defaultVal = Parameters.SCENE_MODE_AUTO;
+		valArray = b.getStringArray(key);
+		if(b.containsKey(key)) {
+			ListPreference lp = (ListPreference) findPreference(key);
+			lp.setSummary(settings.getString(key, defaultVal));
+			// Sets the human-readable entries to be shown in the list.
+			lp.setEntries(valArray);
+			// The array to find the value to save for a preference when an entry from entries is selected.
+			lp.setEntryValues(valArray);
 		}
-
-		return root;
 		
 	}
 

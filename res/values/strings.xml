@@ -5,4 +5,8 @@
     <string name="burst">Frequenz</string>
     <string name="timer">Timer</string>
     <string name="preferences">Einstellungen</string>
+    
+    <!-- KEYs for the preferences -->
+    <string name="key_colorEffect">colorEffect</string>
+    <string name="key_sceneMode">sceneMode</string>
 </resources>

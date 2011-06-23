@@ -1,9 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="Burst/Timer">
-        <CheckBoxPreference android:title="Burst"></CheckBoxPreference>
-        <EditTextPreference android:negativeButtonText="Cancel" android:dialogTitle="Burst" android:title="Shoots" android:dialogMessage="How many pictures?" android:positiveButtonText="Ok" android:summary="How many shoots?"></EditTextPreference>
-        <ListPreference android:title="Color Effects" android:key="testList"></ListPreference>
-    </PreferenceCategory>
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory
+		android:title="Burst/Timer">
+		<CheckBoxPreference
+			android:title="Burst" />
+		<EditTextPreference
+			android:negativeButtonText="Cancel"
+			android:dialogTitle="Burst"
+			android:title="Shoots"
+			android:dialogMessage="How many pictures?"
+			android:positiveButtonText="Ok"
+			android:summary="How many shoots?" />
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:key="prefCat_camera"
+		android:title="Camera">
+		<ListPreference
+			android:title="Color Effects"
+			android:key="@string/key_colorEffect" />
+		<ListPreference
+			android:title="Scene Modes"
+			android:key="@string/key_sceneMode" />
+		
+	</PreferenceCategory>
 </PreferenceScreen>
