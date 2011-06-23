@@ -271,7 +271,17 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		int width = para.getSupportedPictureSizes().get(posInQualiArray).width;
 		int height = para.getSupportedPictureSizes().get(posInQualiArray).height;
 		para.setPictureSize(width, height);
-		para.setPreviewSize(width, height);
+		//*********
+		List<Size> mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
+
+		if (mSupportedPreviewSizes != null) {
+			// get the resolution of the display
+			DisplayMetrics metrics = new DisplayMetrics();
+			getWindowManager().getDefaultDisplay().getMetrics(metrics);
+			mPreviewSize = HelperMethods.getOptimalPreviewSize(mSupportedPreviewSizes, metrics.widthPixels, metrics.heightPixels);
+		}
+		//************
+		para.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 		DecimalFormat df = new DecimalFormat("0.0");
 		infoMsg += "Pic.Quali: " + df.format((float)((float)width*(float)height)/1000000f) + "MP\n";
 		
