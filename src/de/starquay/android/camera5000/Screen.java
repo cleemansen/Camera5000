@@ -1,6 +1,7 @@
 package de.starquay.android.camera5000;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -39,11 +40,9 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	private TextView burstNextView;
 	/** The Count Down Object */
 	private CountDownAction countDown;
-	
+
 	/** A list of preferences, which have been changed by the user */
 	private List<String> newPrefs4CamBuffer;
-	
-	private boolean startup = true;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -66,15 +65,14 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		/** text fields */
 		burstCntView = (TextView) findViewById(R.id.burstCnt);
 		burstNextView = (TextView) findViewById(R.id.burstNext);
-		
+
 		// DOES NOT WORK WELL
-//		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-//		settings.registerOnSharedPreferenceChangeListener(this);
-//		newPrefs4CamBuffer = new LinkedList<String>();
-		
-		
+		// SharedPreferences settings =
+		// PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		// settings.registerOnSharedPreferenceChangeListener(this);
+		// newPrefs4CamBuffer = new LinkedList<String>();
+
 	}
-	
 
 	@Override
 	protected void onResume() {
@@ -82,10 +80,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		// Open the default i.e. the first rear facing camera.
 		mCamera = Camera.open();
 		setCamera(mCamera);
-		if(startup) {
-			applySettings(startup);
-			startup = false;
-		}
+		applySettings();
 	}
 
 	@Override
@@ -108,7 +103,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			countDown.cancel();
 		super.onStop();
 	}
-	
+
 	/**
 	 * Sets the camera and his parameters (i.e. optimal preview size)
 	 * 
@@ -118,14 +113,14 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		mCamera = camera;
 		if (mCamera != null) {
 			List<Size> mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
-			
+
 			if (mSupportedPreviewSizes != null) {
 				// get the resolution of the display
 				DisplayMetrics metrics = new DisplayMetrics();
 				getWindowManager().getDefaultDisplay().getMetrics(metrics);
 				mPreviewSize = HelperMethods.getOptimalPreviewSize(mSupportedPreviewSizes, metrics.widthPixels, metrics.heightPixels);
 			}
-			applySettings(true);
+			applySettings();
 		}
 	}
 
@@ -149,30 +144,31 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			//mCamera.startPreview();
-			//startBurstSession(5, 5);
+			// mCamera.startPreview();
+			// startBurstSession(5, 5);
 			break;
 		default:
 			break;
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 		if (resultCode == 0 && requestCode == RESULT_OK) {
-			applySettings(true);
+			applySettings();
 		}
 	};
-	
+
 	/**
-	 * Reads the supported Parameters from the camera
-	 * and prepares an Intent for the Preferences Screen
+	 * Reads the supported Parameters from the camera and prepares an Intent for
+	 * the Preferences Screen
+	 * 
 	 * @return
 	 */
 	private Intent readCameraParametersAndPrepareAppSettings() {
 		Intent showPrefs = new Intent(getBaseContext(), Preferences.class);
 		Parameters para = mCamera.getParameters();
-		
+
 		/** Scene Modes */
 		String key = this.getString(R.string.key_sceneMode);
 		List<String> listOfSupportedModes = para.getSupportedSceneModes();
@@ -189,107 +185,99 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		key = this.getString(R.string.key_focusMode);
 		listOfSupportedModes = para.getSupportedFocusModes();
 		showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
-		
-		
+
 		/** Picture Size */
 		key = this.getString(R.string.key_picQuali);
 		List<Size> picSize = para.getSupportedPictureSizes();
 		String[] picSizeArray = new String[picSize.size()];
-		for(int i = 0; i < picSize.size(); i++) {
+		for (int i = 0; i < picSize.size(); i++) {
 			Size size = picSize.get(i);
 			picSizeArray[i] = size.width + "x" + size.height;
 		}
 		showPrefs.putExtra(key, picSizeArray);
-		
+
 		return showPrefs;
 
 	}
-	
+
 	/**
 	 * Reacts on changed shared preferences
 	 * 
-	 * THIS DOES NOT WORK WELL - CHANGED.
-	 * It is not possible to change only one camera parameter,
-	 * you have to set all parameters at one time.
+	 * THIS DOES NOT WORK WELL - CHANGED. It is not possible to change only one
+	 * camera parameter, you have to set all parameters at one time.
 	 * 
-	 * The LinkedList applyTheseSettings is a Work-Around:
-	 * I couldn't apply the changes directly to the camera, because the camera was released by onPause().
+	 * The LinkedList applyTheseSettings is a Work-Around: I couldn't apply the
+	 * changes directly to the camera, because the camera was released by
+	 * onPause().
 	 */
 	@Override
 	public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-		
+
 		/** Color Effects */
 		String look4key = this.getString(R.string.key_colorEffect);
-		if(key.equals(look4key)) {
+		if (key.equals(look4key)) {
 			newPrefs4CamBuffer.add(key);
 		}
 		/** Scene Modes */
 		look4key = this.getString(R.string.key_sceneMode);
-		if(key.equals(look4key)) {
+		if (key.equals(look4key)) {
 			newPrefs4CamBuffer.add(key);
 		}
 		/** White Balance */
 		look4key = this.getString(R.string.key_whiteBalance);
-		if(key.equals(look4key)) {
+		if (key.equals(look4key)) {
 			newPrefs4CamBuffer.add(key);
 		}
 		/** Focus Mode */
 		look4key = this.getString(R.string.key_focusMode);
-		if(key.equals(look4key)) {
+		if (key.equals(look4key)) {
 			newPrefs4CamBuffer.add(key);
 		}
 		/** Picture Quality */
 		look4key = this.getString(R.string.key_picQuali);
-		if(key.equals(look4key)) {
+		if (key.equals(look4key)) {
 			newPrefs4CamBuffer.add(key);
 		}
-		
+
 	}
+
 	/**
 	 * Applies the settings done by the user with the preference activity
-	 * @param startup: signals the app is starting the first time
-	 * 			if true: apply all stored settings.
-	 * 			if false: apply only changed settings.
 	 */
-	private void applySettings(boolean startup) {
+	private void applySettings() {
 		Parameters para = mCamera.getParameters();
-		String oldfx = para.getColorEffect();
 		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
+		String infoMsg = "";
+
+		/** Color Effects */
+		String storedKey = this.getString(R.string.key_colorEffect);
+		para.setColorEffect(shared.getString(storedKey, Parameters.EFFECT_NONE));
+		infoMsg += "ColorFx: " + shared.getString(storedKey, Parameters.EFFECT_NONE) + "\n";
+		/** Scene Mode */
+		storedKey = this.getString(R.string.key_sceneMode);
+		para.setSceneMode(shared.getString(storedKey, Parameters.SCENE_MODE_AUTO));
+		infoMsg += "Scene: " + shared.getString(storedKey, Parameters.EFFECT_NONE) + "\n";
+		/** White Balance */
+		storedKey = this.getString(R.string.key_whiteBalance);
+		para.setWhiteBalance(shared.getString(storedKey, Parameters.SCENE_MODE_AUTO));
+		infoMsg += "White Balance: " + shared.getString(storedKey, Parameters.EFFECT_NONE) + "\n";
+		/** Focus Mode */
+		storedKey = this.getString(R.string.key_focusMode);
+		para.setFocusMode(shared.getString(storedKey, Parameters.FOCUS_MODE_AUTO));
+		infoMsg += "FocusMode: " + shared.getString(storedKey, Parameters.EFFECT_NONE) + "\n";
+		/** Picture Quality */
+		storedKey = this.getString(R.string.key_picQuali);
+		int posInQualiArray = Integer.valueOf(shared.getString(storedKey, "0"));
+		int width = para.getSupportedPictureSizes().get(posInQualiArray).width;
+		int height = para.getSupportedPictureSizes().get(posInQualiArray).height;
+		para.setPictureSize(width, height);
+		para.setPreviewSize(width, height);
+		DecimalFormat df = new DecimalFormat("0.0");
+		infoMsg += "Pic.Quali: " + df.format((float)((float)width*(float)height)/1000000f) + "MP\n";
 		
-//		Iterator<String> i = newPrefs4CamBuffer.iterator();
-		while(/*i.hasNext() || */startup) {
-			String key = "";
-//			if(i.hasNext())
-//				key = i.next();
-			/** Color Effects */
-			String storedKey = this.getString(R.string.key_colorEffect);
-			if(/*key.equals(storedKey) || */startup)
-				para.setColorEffect(shared.getString(storedKey, Parameters.EFFECT_NONE));
-			/** Scene Mode */
-			storedKey = this.getString(R.string.key_sceneMode);
-			if(/*key.equals(storedKey) || */startup)
-				para.setSceneMode(shared.getString(storedKey, Parameters.SCENE_MODE_AUTO));
-			/** White Balance */
-			storedKey = this.getString(R.string.key_whiteBalance);
-			if(/*key.equals(storedKey) || */startup)
-				para.setWhiteBalance(shared.getString(storedKey, Parameters.SCENE_MODE_AUTO));
-			/** Focus Mode */
-			storedKey = this.getString(R.string.key_focusMode);
-			if(/*key.equals(storedKey) || */startup)
-				para.setFocusMode(shared.getString(storedKey, Parameters.FOCUS_MODE_AUTO));
-			/** Picture Quality */
-			storedKey = this.getString(R.string.key_picQuali);
-			if(/*key.equals(storedKey) || */startup) {
-				int posInQualiArray = Integer.valueOf(shared.getString(storedKey, "0"));
-				int width = para.getSupportedPictureSizes().get(posInQualiArray).width;
-				int height = para.getSupportedPictureSizes().get(posInQualiArray).height;
-				para.setPictureSize(width, height);
-				para.setPreviewSize(width, height);
-			}
-			
-			startup = false;
-		}
-//		newPrefs4CamBuffer = new LinkedList<String>();
+		TextView info = (TextView)findViewById(R.id.infoView);
+		info.setText(infoMsg);
+
 		mCamera.setParameters(para);
 	}
 
@@ -330,18 +318,19 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	@Override
 	public void onClick(View v) {
 		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		if(shared.getBoolean(this.getString(R.string.key_burstMode), false)) {
+		if (shared.getBoolean(this.getString(R.string.key_burstMode), false)) {
 			int shots = Integer.valueOf(shared.getString(this.getString(R.string.key_burstNumberValue), "1"));
 			int frequency = Integer.valueOf(shared.getString(this.getString(R.string.key_burstIntervalValue), "5"));
 			startBurstSession(shots, frequency);
-		}else{
+		} else {
 			HelperMethods.takePicture(mCamera);
 		}
 	}
 
 	/**
 	 * starts taking pictures in an interval of @link{frequency} seconds and
-	 * @link{shots} pictures
+	 * 
+	 * @link{shots pictures
 	 * 
 	 * @param shots
 	 *            : number of pictures
@@ -358,6 +347,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 
 	/**
 	 * Inner Class for CountDown in Burst mode
+	 * 
 	 * @author Clemens
 	 * 
 	 */
