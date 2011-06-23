@@ -9,7 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
 import android.graphics.BitmapFactory;
@@ -35,13 +34,15 @@ public class HelperMethods {
 	static Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
 
 		public void onPictureTaken(byte[] imageData, Camera c) {
+			//http://stackoverflow.com/questions/2043019/image-processing-on-android
 			if (imageData != null) {
 				
 				Calendar cal = Calendar.getInstance();
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH.mm.ss.S");
-				HelperMethods.StoreByteImage(imageData, 50, sdf.format(cal.getTime()));
+				HelperMethods.StoreByteImage(imageData, 100, sdf.format(cal.getTime()));
 
 				c.startPreview();
+				
 			}
 		}
 	};
@@ -56,7 +57,7 @@ public class HelperMethods {
 			BitmapFactory.Options options = new BitmapFactory.Options();
 			options.inSampleSize = 4;
 
-			Bitmap myImage = BitmapFactory.decodeByteArray(imageData, 0, imageData.length, options);
+			Bitmap myImage = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);//, options);
 
 			File finalDir = new File(sdImageMainDirectory.getAbsoluteFile().getPath() + "/FreqCap");
 			finalDir.mkdir();

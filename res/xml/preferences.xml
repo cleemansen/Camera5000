@@ -4,24 +4,47 @@
 	<PreferenceCategory
 		android:title="Burst/Timer">
 		<CheckBoxPreference
-			android:title="Burst" />
-		<EditTextPreference
-			android:negativeButtonText="Cancel"
-			android:dialogTitle="Burst"
-			android:title="Shoots"
-			android:dialogMessage="How many pictures?"
-			android:positiveButtonText="Ok"
-			android:summary="How many shoots?" />
+			android:key="@string/key_burstMode"
+			android:title="Burst Mode" />
+		<PreferenceScreen
+			android:key="key_burstPrefScreen"
+			android:title="Burst settings"
+			android:summary="Number of snapshots / Interval"
+			android:dependency="@string/key_burstMode">
+			<EditTextPreference
+				android:key="@string/key_burstNumberValue"
+				android:title="How many snapshots"
+				android:dialogTitle="Burst"
+				android:dialogMessage="How many snapshots?"
+				android:positiveButtonText="Ok"
+				android:negativeButtonText="Cancel" />
+			<EditTextPreference
+				android:key="@string/key_burstIntervalValue"
+				android:title="Seconds between two pictures"
+				android:dialogTitle="Burst"
+				android:dialogMessage="Seconds between two pictures?"
+				android:positiveButtonText="Ok"
+				android:negativeButtonText="Cancel" />
+		</PreferenceScreen>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:key="prefCat_camera"
 		android:title="Camera">
 		<ListPreference
+			android:title="Picture Quality"
+			android:key="@string/key_picQuali" />
+		<ListPreference
 			android:title="Color Effects"
 			android:key="@string/key_colorEffect" />
 		<ListPreference
+			android:title="Focus Mode"
+			android:key="@string/key_focusMode" />
+		<ListPreference
 			android:title="Scene Modes"
 			android:key="@string/key_sceneMode" />
+		<ListPreference
+			android:title="White Balance"
+			android:key="@string/key_whiteBalance" />
 		
 	</PreferenceCategory>
 </PreferenceScreen>
