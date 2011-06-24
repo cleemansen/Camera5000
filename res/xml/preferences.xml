@@ -29,14 +29,30 @@
 		<CheckBoxPreference
 			android:key="@string/key_timerMode"
 			android:title="Timer Mode" />
-			<EditTextPreference
-				android:key="@string/key_timerNumberValue"
-				android:dependency="@string/key_timerMode"
-				android:title="Timer"
-				android:dialogTitle="Timer"
-				android:dialogMessage="Seconds until the first picture will be captured?"
-				android:positiveButtonText="Ok"
-				android:negativeButtonText="Cancel" />
+		<EditTextPreference
+			android:key="@string/key_timerNumberValue"
+			android:dependency="@string/key_timerMode"
+			android:title="Timer"
+			android:dialogTitle="Timer"
+			android:dialogMessage="Seconds until the first picture will be captured?"
+			android:positiveButtonText="Ok"
+			android:negativeButtonText="Cancel" />
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:key="prefCat_storage"
+		android:title="Picture Settings">
+		<EditTextPreference
+			android:key="@string/key_compressRate"
+			android:title="Compress rate of the pictures"
+			android:dialogTitle="Compress rate"
+			android:dialogMessage="0 meaning compress for small size, 100 meaning compress for max quality"
+			android:positiveButtonText="Ok"
+			android:negativeButtonText="Cancel" />
+		<ListPreference
+			android:title="Storage Target"
+			android:key="@string/key_storageTarget"
+			android:entries="@array/storageTarget"
+			android:entryValues="@array/storageTargetValues" />
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:key="prefCat_camera"
@@ -56,6 +72,6 @@
 		<ListPreference
 			android:title="White Balance"
 			android:key="@string/key_whiteBalance" />
-		
+
 	</PreferenceCategory>
 </PreferenceScreen>

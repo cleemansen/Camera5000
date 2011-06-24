@@ -365,7 +365,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	}
 
 	/**
-	 * Inner Class for CountDown in Burst mode
+	 * Inner Class for CountDown in Burst and/or Timer mode
 	 * 
 	 * @author Clemens
 	 * 
@@ -376,6 +376,13 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		private long countDownInterval;
 		private long secondsBetween2Pics;
 
+		/**
+		 * creates an count down
+		 * @param millisInFuture: first action = timer until first picture
+		 * @param countDownInterval: update of the textView every x millis
+		 * @param burstCnt: number of pics in this burst session
+		 * @param secondsBetween2Pics: pause between 2 pics
+		 */
 		public CountDownAction(long millisInFuture, long countDownInterval, int burstCnt, long secondsBetween2Pics) {
 			super(millisInFuture, countDownInterval);
 			this.burstCnt = burstCnt;

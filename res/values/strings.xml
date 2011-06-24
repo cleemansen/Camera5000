@@ -14,6 +14,9 @@
     <string name="key_timerMode">timerMode</string>
     <string name="key_timerNumberValue">timerNumberValue</string>
     
+    <string name="key_compressRate">compressRate</string>
+    <string name="key_storageTarget">storageTarget</string>
+        
     <string name="key_picQuali">pictureQuality</string>
     <string name="key_colorEffect">colorEffect</string>
     <string name="key_sceneMode">sceneMode</string>

@@ -31,6 +31,8 @@ public class HelperMethods {
 
 	private static Camera mCamera;
 
+	private static int picCompression = 100;
+	private static String storageTarget = Environment.getExternalStorageDirectory().getAbsoluteFile() + "";
 	/**
 	 * Capture the picture from the camera
 	 */
@@ -64,7 +66,7 @@ public class HelperMethods {
 	 * @return
 	 */
 	public static boolean StoreByteImage(byte[] imageData, int quality, String filename) {
-		String directory = Environment.getExternalStorageDirectory().getAbsoluteFile() + "/FreqCap2";
+		String directory = storageTarget + "/FreqCap";
 		Bitmap source = BitmapFactory.decodeByteArray(imageData, 0, imageData.length);
 		
 		OutputStream outputStream = null;
@@ -76,7 +78,7 @@ public class HelperMethods {
 			File file = new File(directory, filename);
 			outputStream = new FileOutputStream(file);
 			if (source != null) {
-				source.compress(CompressFormat.JPEG, 95, outputStream);
+				source.compress(CompressFormat.JPEG, picCompression, outputStream);
 			} else {
 				outputStream.write(imageData);
 				// degree[0] = getExifOrientation(filePath);
@@ -231,5 +233,13 @@ public class HelperMethods {
 			}
 		}
 		return optimalSize;
+	}
+	
+	public static void setPicCompression(int picCompression) {
+		HelperMethods.picCompression = picCompression;
+	}
+	
+	public static void setStorageTarget(String storageTarget) {
+		HelperMethods.storageTarget = storageTarget;
 	}
 }

@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.hardware.Camera.Parameters;
 import android.os.Bundle;
+import android.os.Environment;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.ListPreference;
@@ -15,6 +16,7 @@ import android.preference.PreferenceScreen;
 import android.text.InputType;
 import android.text.method.DigitsKeyListener;
 import android.widget.EditText;
+import android.widget.TextView;
 
 public class Preferences extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 	
@@ -69,6 +71,16 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
 		/** Timer Mode */
 		/** Seconds until picture */
 		key = this.getString(R.string.key_timerNumberValue);
+		etp = (EditTextPreference) findPreference(key);
+		etp.setSummary(settings.getString(key, "not set"));
+		// only numbers!
+		myEditText = (EditText)etp.getEditText(); 
+		myEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
+		
+		/**
+		 * Picture Settings
+		 */
+		key = this.getString(R.string.key_compressRate);
 		etp = (EditTextPreference) findPreference(key);
 		etp.setSummary(settings.getString(key, "not set"));
 		// only numbers!
@@ -152,6 +164,22 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
 		} else if(pref instanceof ListPreference) {
 			ListPreference lp = (ListPreference) pref;
 			lp.setSummary(lp.getValue());
+		}
+		
+		/** compress rate */
+		if(key.equals(this.getString(R.string.key_compressRate))) {
+			TextView tv = (TextView) findViewById(R.string.key_compressRate);
+			HelperMethods.setPicCompression(Integer.valueOf(sharedPreferences.getString(this.getString(R.string.key_compressRate), "100")));
+		}
+		/** storage target */
+		if(key.equals(this.getString(R.string.key_storageTarget))) {
+			String storageTarget = sharedPreferences.getString(this.getString(R.string.key_storageTarget), "internal");
+			if(storageTarget.equals("internal") || storageTarget.equals("phone")){
+				HelperMethods.setStorageTarget(Environment.getExternalStorageDirectory().getAbsoluteFile() + "");
+			} else if(storageTarget.equals("external")) {
+				HelperMethods.setStorageTarget(Environment.getExternalStorageDirectory().getAbsoluteFile() + "/external_sd");
+			}
+			
 		}
 		
 	}

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <array name="ColorEffects">
-    	<item>one</item>
-    	<item>two</item>
-    	<item>three</item>
-    </array>
-    <array name="ColorEffectsV">
-    	<item>on</item>
-    	<item>tw</item>
-    	<item>thee</item>
+    <string-array name="storageTarget">
+    	<item>Phone (does not work!)</item>
+    	<item>Internal SD Card</item>
+    	<item>External SD Card</item>
+    </string-array>
+    <array name="storageTargetValues">
+    	<item>phone</item>
+    	<item>internal</item>
+    	<item>external</item>
     </array>
     
 </resources>
