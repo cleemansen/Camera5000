@@ -26,6 +26,17 @@
 				android:positiveButtonText="Ok"
 				android:negativeButtonText="Cancel" />
 		</PreferenceScreen>
+		<CheckBoxPreference
+			android:key="@string/key_timerMode"
+			android:title="Timer Mode" />
+			<EditTextPreference
+				android:key="@string/key_timerNumberValue"
+				android:dependency="@string/key_timerMode"
+				android:title="Timer"
+				android:dialogTitle="Timer"
+				android:dialogMessage="Seconds until the first picture will be captured?"
+				android:positiveButtonText="Ok"
+				android:negativeButtonText="Cancel" />
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:key="prefCat_camera"

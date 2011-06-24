@@ -45,7 +45,7 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
 		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
 		
 		/**
-		 * BURST Settings
+		 * BURST / TIMER Settings
 		 */
 		
 		/** Burst Mode */
@@ -66,6 +66,14 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
 		myEditText = (EditText)etp.getEditText(); 
 		myEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
 		
+		/** Timer Mode */
+		/** Seconds until picture */
+		key = this.getString(R.string.key_timerNumberValue);
+		etp = (EditTextPreference) findPreference(key);
+		etp.setSummary(settings.getString(key, "not set"));
+		// only numbers!
+		myEditText = (EditText)etp.getEditText(); 
+		myEditText.setInputType(InputType.TYPE_CLASS_NUMBER);
 		
 		/** 
 		 * All Camera Settings 

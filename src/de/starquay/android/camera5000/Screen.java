@@ -328,13 +328,21 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	@Override
 	public void onClick(View v) {
 		SharedPreferences shared = PreferenceManager.getDefaultSharedPreferences(getBaseContext());
-		if (shared.getBoolean(this.getString(R.string.key_burstMode), false)) {
-			int shots = Integer.valueOf(shared.getString(this.getString(R.string.key_burstNumberValue), "1"));
-			int frequency = Integer.valueOf(shared.getString(this.getString(R.string.key_burstIntervalValue), "5"));
-			startBurstSession(shots, frequency);
-		} else {
-			HelperMethods.takePicture(mCamera);
+		int timer = 0;
+		int shots = 1;
+		int secBetween2Pics = 0;
+		if (shared.getBoolean(this.getString(R.string.key_timerMode), false)) {
+			//TIMER
+			timer = Integer.valueOf(shared.getString(this.getString(R.string.key_timerNumberValue), "1"));
 		}
+		if (shared.getBoolean(this.getString(R.string.key_burstMode), false)) {
+			//BURST (plus maybe TIMER)
+			shots = Integer.valueOf(shared.getString(this.getString(R.string.key_burstNumberValue), "1"));
+			secBetween2Pics = Integer.valueOf(shared.getString(this.getString(R.string.key_burstIntervalValue), "5"));
+		} else {
+//			HelperMethods.takePicture(mCamera);
+		}
+		startBurstSession(shots, secBetween2Pics, timer);
 	}
 
 	/**
@@ -344,12 +352,13 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	 * 
 	 * @param shots
 	 *            : number of pictures
-	 * @param frequency
+	 * @param secBetween2Pics
 	 *            : pause between two shoots in seconds!
+	 * @param timer: seconds until first picture
 	 */
-	private void startBurstSession(int shots, int frequency) {
+	private void startBurstSession(int shots, int secBetween2Pics, int timer) {
 		/** init a countdown for the user */
-		countDown = new CountDownAction(frequency * 1000, 1000, shots);
+		countDown = new CountDownAction(timer * 1000, 1000, shots, secBetween2Pics * 1000);
 		/** this will take the pictures in the given interval */
 		// mBurstHandler = new BurstHandler(this, shots, frequency);
 
@@ -364,12 +373,17 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	public class CountDownAction extends CountDownTimer {
 
 		private int burstCnt;
+		private long countDownInterval;
+		private long secondsBetween2Pics;
 
-		public CountDownAction(long millisInFuture, long countDownInterval, int burstCnt) {
+		public CountDownAction(long millisInFuture, long countDownInterval, int burstCnt, long secondsBetween2Pics) {
 			super(millisInFuture, countDownInterval);
 			this.burstCnt = burstCnt;
+			this.countDownInterval = countDownInterval;
+			this.secondsBetween2Pics = secondsBetween2Pics;
 			// start immediately with the first picture
-			HelperMethods.takePicture(mCamera);
+			// NO! see feature timer
+//			HelperMethods.takePicture(mCamera);
 			burstCntView.setText("Img Cnt: " + burstCnt);
 			this.start();
 		}
@@ -381,7 +395,8 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			burstCnt--;
 			burstCntView.setText("Img Cnt: " + burstCnt);
 			if (burstCnt > 0) {
-				this.start();
+				//BURST MODE
+				countDown = new CountDownAction(secondsBetween2Pics, countDownInterval, burstCnt, secondsBetween2Pics);
 			}
 		}
 

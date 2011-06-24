@@ -10,6 +10,10 @@
     <string name="key_burstMode">burstMode</string>
     <string name="key_burstNumberValue">burstNumberValue</string>
     <string name="key_burstIntervalValue">burstIntervalValue</string>
+    
+    <string name="key_timerMode">timerMode</string>
+    <string name="key_timerNumberValue">timerNumberValue</string>
+    
     <string name="key_picQuali">pictureQuality</string>
     <string name="key_colorEffect">colorEffect</string>
     <string name="key_sceneMode">sceneMode</string>

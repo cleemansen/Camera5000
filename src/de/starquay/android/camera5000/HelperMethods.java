@@ -56,7 +56,7 @@ public class HelperMethods {
 	};
 
 	/**
-	 * From original Camera App
+	 * From original Android Camera App
 	 * See: http://android.git.kernel.org/?p=platform/packages/apps/Camera.git;a=blob;f=src/com/android/camera/ImageManager.java;h=76a6d1dffdcfb91f2c55032ce14f7cd9ecf7962c;hb=HEAD
 	 * @param imageData
 	 * @param quality
@@ -76,7 +76,7 @@ public class HelperMethods {
 			File file = new File(directory, filename);
 			outputStream = new FileOutputStream(file);
 			if (source != null) {
-				source.compress(CompressFormat.JPEG, 100, outputStream);
+				source.compress(CompressFormat.JPEG, 95, outputStream);
 			} else {
 				outputStream.write(imageData);
 				// degree[0] = getExifOrientation(filePath);
