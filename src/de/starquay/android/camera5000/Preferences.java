@@ -91,6 +91,8 @@ public class Preferences extends PreferenceActivity implements OnSharedPreferenc
 		 * All Camera Settings 
 		 */
 		//FIXME: Problem: Camera with other skills!
+		if(b == null)
+			return;
 		
 		/** Color Effects */
 		key = this.getString(R.string.key_colorEffect);

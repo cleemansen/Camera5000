@@ -6,8 +6,11 @@
 		android:title="@string/preferences">
 	</item>
 	<item
-		android:id="@+id/test_button"
-		android:title="Test">
+		android:id="@+id/preview_off"
+		android:title="Preview OFF">
 	</item>
-	
+	<item
+		android:id="@+id/preview_on"
+		android:title="Preview ON">
+	</item>
 </menu>

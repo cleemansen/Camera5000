@@ -2,19 +2,23 @@ package de.starquay.android.camera5000;
 
 import java.io.IOException;
 import java.text.DecimalFormat;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.hardware.Camera;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -27,12 +31,14 @@ import android.view.View.OnClickListener;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
-import android.widget.Toast;
 
-public class Screen extends Activity implements SurfaceHolder.Callback, OnClickListener, OnSharedPreferenceChangeListener {
+public class Screen extends Activity implements SurfaceHolder.Callback, OnClickListener, OnSharedPreferenceChangeListener, SensorEventListener {
 
 	private Camera mCamera;
 	private Size mPreviewSize;
+	/** The camera surface */
+	private SurfaceView surface;
+	private SurfaceHolder holder;
 
 	/** TextView of the remaining numbers of pictures in burst mode */
 	private TextView burstCntView;
@@ -44,6 +50,11 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	/** A list of preferences, which have been changed by the user */
 	private List<String> newPrefs4CamBuffer;
 
+	/** Power management */
+	private PowerManager.WakeLock wl;
+	private SensorManager mSensorManager;
+	private boolean preview = true;
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -54,8 +65,8 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 
 		/** Layout */
 		setContentView(R.layout.camera_surface);
-		SurfaceView surface = (SurfaceView) findViewById(R.id.surface_camera);
-		SurfaceHolder holder = surface.getHolder();
+		surface = (SurfaceView) findViewById(R.id.surface_camera);
+		holder = surface.getHolder();
 		holder.addCallback(this);
 		holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
@@ -65,6 +76,9 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		/** text fields */
 		burstCntView = (TextView) findViewById(R.id.burstCnt);
 		burstNextView = (TextView) findViewById(R.id.burstNext);
+		
+		mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		mSensorManager.registerListener(this, mSensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY), SensorManager.SENSOR_DELAY_UI);
 
 		// DOES NOT WORK WELL
 		// SharedPreferences settings =
@@ -81,6 +95,10 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		mCamera = Camera.open();
 		setCamera(mCamera);
 		applySettings();
+
+		PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "My Tag");
+		wl.acquire();
 	}
 
 	@Override
@@ -92,6 +110,8 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			mCamera.release();
 			setCamera(null);
 		}
+		if(wl.isHeld())
+			wl.release();
 	}
 
 	/**
@@ -102,6 +122,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		if (countDown != null)
 			countDown.cancel();
 		super.onStop();
+//		wl.release();
 	}
 
 	/**
@@ -136,7 +157,9 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		case R.id.prefs:
 			startActivityForResult(readCameraParametersAndPrepareAppSettings(), RESULT_OK);
 			break;
-		case R.id.test_button:
+		case R.id.preview_off:
+			preview = false;
+			holder = null;
 			SurfaceView view = new SurfaceView(getBaseContext());
 			try {
 				mCamera.setPreviewDisplay(view.getHolder());
@@ -144,8 +167,19 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			// mCamera.startPreview();
-			// startBurstSession(5, 5);
+			break;
+		case R.id.preview_on:
+			preview = true;
+			holder = surface.getHolder();
+			holder.addCallback(this);
+			holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+			
+			try {
+				mCamera.setPreviewDisplay(holder);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			break;
 		default:
 			break;
@@ -172,19 +206,23 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		/** Scene Modes */
 		String key = this.getString(R.string.key_sceneMode);
 		List<String> listOfSupportedModes = para.getSupportedSceneModes();
-		showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
+		if (listOfSupportedModes != null)
+			showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
 		/** Color Effects */
 		key = this.getString(R.string.key_colorEffect);
 		listOfSupportedModes = para.getSupportedColorEffects();
-		showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
+		if (listOfSupportedModes != null)
+			showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
 		/** White Balance */
 		key = this.getString(R.string.key_whiteBalance);
 		listOfSupportedModes = para.getSupportedWhiteBalance();
-		showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
+		if (listOfSupportedModes != null)
+			showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
 		/** Focus Mode */
 		key = this.getString(R.string.key_focusMode);
 		listOfSupportedModes = para.getSupportedFocusModes();
-		showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
+		if (listOfSupportedModes != null)
+			showPrefs.putExtra(key, listOfSupportedModes.toArray(new String[listOfSupportedModes.size()]));
 
 		/** Picture Size */
 		key = this.getString(R.string.key_picQuali);
@@ -194,7 +232,8 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			Size size = picSize.get(i);
 			picSizeArray[i] = size.width + "x" + size.height;
 		}
-		showPrefs.putExtra(key, picSizeArray);
+		if (listOfSupportedModes != null)
+			showPrefs.putExtra(key, picSizeArray);
 
 		return showPrefs;
 
@@ -271,7 +310,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		int width = para.getSupportedPictureSizes().get(posInQualiArray).width;
 		int height = para.getSupportedPictureSizes().get(posInQualiArray).height;
 		para.setPictureSize(width, height);
-		//*********
+		// *********
 		List<Size> mSupportedPreviewSizes = mCamera.getParameters().getSupportedPreviewSizes();
 
 		if (mSupportedPreviewSizes != null) {
@@ -280,12 +319,12 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			getWindowManager().getDefaultDisplay().getMetrics(metrics);
 			mPreviewSize = HelperMethods.getOptimalPreviewSize(mSupportedPreviewSizes, metrics.widthPixels, metrics.heightPixels);
 		}
-		//************
+		// ************
 		para.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 		DecimalFormat df = new DecimalFormat("0.0");
-		infoMsg += "Pic.Quali: " + df.format((float)((float)width*(float)height)/1000000f) + "MP\n";
-		
-		TextView info = (TextView)findViewById(R.id.infoView);
+		infoMsg += "Pic.Quali: " + df.format((float) ((float) width * (float) height) / 1000000f) + "MP\n";
+
+		TextView info = (TextView) findViewById(R.id.infoView);
 		info.setText(infoMsg);
 
 		mCamera.setParameters(para);
@@ -332,15 +371,15 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		int shots = 1;
 		int secBetween2Pics = 0;
 		if (shared.getBoolean(this.getString(R.string.key_timerMode), false)) {
-			//TIMER
+			// TIMER
 			timer = Integer.valueOf(shared.getString(this.getString(R.string.key_timerNumberValue), "1"));
 		}
 		if (shared.getBoolean(this.getString(R.string.key_burstMode), false)) {
-			//BURST (plus maybe TIMER)
+			// BURST (plus maybe TIMER)
 			shots = Integer.valueOf(shared.getString(this.getString(R.string.key_burstNumberValue), "1"));
 			secBetween2Pics = Integer.valueOf(shared.getString(this.getString(R.string.key_burstIntervalValue), "5"));
 		} else {
-//			HelperMethods.takePicture(mCamera);
+			// HelperMethods.takePicture(mCamera);
 		}
 		startBurstSession(shots, secBetween2Pics, timer);
 	}
@@ -354,7 +393,8 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 	 *            : number of pictures
 	 * @param secBetween2Pics
 	 *            : pause between two shoots in seconds!
-	 * @param timer: seconds until first picture
+	 * @param timer
+	 *            : seconds until first picture
 	 */
 	private void startBurstSession(int shots, int secBetween2Pics, int timer) {
 		/** init a countdown for the user */
@@ -378,10 +418,15 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 
 		/**
 		 * creates an count down
-		 * @param millisInFuture: first action = timer until first picture
-		 * @param countDownInterval: update of the textView every x millis
-		 * @param burstCnt: number of pics in this burst session
-		 * @param secondsBetween2Pics: pause between 2 pics
+		 * 
+		 * @param millisInFuture
+		 *            : first action = timer until first picture
+		 * @param countDownInterval
+		 *            : update of the textView every x millis
+		 * @param burstCnt
+		 *            : number of pics in this burst session
+		 * @param secondsBetween2Pics
+		 *            : pause between 2 pics
 		 */
 		public CountDownAction(long millisInFuture, long countDownInterval, int burstCnt, long secondsBetween2Pics) {
 			super(millisInFuture, countDownInterval);
@@ -390,7 +435,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			this.secondsBetween2Pics = secondsBetween2Pics;
 			// start immediately with the first picture
 			// NO! see feature timer
-//			HelperMethods.takePicture(mCamera);
+			// HelperMethods.takePicture(mCamera);
 			burstCntView.setText("Img Cnt: " + burstCnt);
 			this.start();
 		}
@@ -402,7 +447,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			burstCnt--;
 			burstCntView.setText("Img Cnt: " + burstCnt);
 			if (burstCnt > 0) {
-				//BURST MODE
+				// BURST MODE
 				countDown = new CountDownAction(secondsBetween2Pics, countDownInterval, burstCnt, secondsBetween2Pics);
 			}
 		}
@@ -411,6 +456,42 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		public void onTick(long millisUntilFinished) {
 			burstNextView.setText("Timer: " + millisUntilFinished / 1000);
 		}
+	}
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		if (event.sensor.getType() == Sensor.TYPE_PROXIMITY) {
+			if (event.values[0] == 0) {
+				if(holder == null && surface != null && preview == false) {
+					holder = surface.getHolder();
+					holder.addCallback(this);
+					holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+					
+					try {
+						mCamera.setPreviewDisplay(holder);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			} else if (event.values[0] == 1 && preview == false) {
+				holder = null;
+				SurfaceView view = new SurfaceView(getBaseContext());
+				try {
+					mCamera.setPreviewDisplay(view.getHolder());
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
 	}
 
 }
