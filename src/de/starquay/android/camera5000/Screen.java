@@ -377,6 +377,10 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 		if (shared.getBoolean(this.getString(R.string.key_burstMode), false)) {
 			// BURST (plus maybe TIMER)
 			shots = Integer.valueOf(shared.getString(this.getString(R.string.key_burstNumberValue), "1"));
+			// infinite
+			if(shared.getBoolean(this.getString(R.string.key_burstInfiniteNumber), false)) {
+				shots = -1;
+			}
 			secBetween2Pics = Integer.valueOf(shared.getString(this.getString(R.string.key_burstIntervalValue), "5"));
 		} else {
 			// HelperMethods.takePicture(mCamera);
@@ -446,7 +450,7 @@ public class Screen extends Activity implements SurfaceHolder.Callback, OnClickL
 			HelperMethods.takePicture(mCamera);
 			burstCnt--;
 			burstCntView.setText("Img Cnt: " + burstCnt);
-			if (burstCnt > 0) {
+			if (burstCnt > 0 || burstCnt <= -1) {
 				// BURST MODE
 				countDown = new CountDownAction(secondsBetween2Pics, countDownInterval, burstCnt, secondsBetween2Pics);
 			}

@@ -8,6 +8,7 @@
     
     <!-- KEYs for the preferences -->
     <string name="key_burstMode">burstMode</string>
+    <string name="key_burstInfiniteNumber">burstInfiniteNumber</string>
     <string name="key_burstNumberValue">burstNumberValue</string>
     <string name="key_burstIntervalValue">burstIntervalValue</string>
     

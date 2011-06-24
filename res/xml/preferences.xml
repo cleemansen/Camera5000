@@ -11,6 +11,9 @@
 			android:title="Burst settings"
 			android:summary="Number of snapshots / Interval"
 			android:dependency="@string/key_burstMode">
+			<CheckBoxPreference
+				android:key="@string/key_burstInfiniteNumber"
+				android:title="Infinite pictures" />
 			<EditTextPreference
 				android:key="@string/key_burstNumberValue"
 				android:title="How many snapshots"
